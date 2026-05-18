@@ -7,3 +7,9 @@ body,
   height: 100%;
   overflow: hidden;
 }
+
+html,
+body {
+  overscroll-behavior-x: none;
+  /* prevent backwards/forwards navigation to another webpage */
+}
