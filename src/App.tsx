@@ -5,7 +5,7 @@ import Scene from './Scene';
 function App() {
   return (
     <>
-      <Canvas>
+      <Canvas camera={{ position: [0, 0, 0], fov: 50 }}>
         <Scene />
       </Canvas>
     </>
