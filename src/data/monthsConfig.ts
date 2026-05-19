@@ -71,6 +71,6 @@ export const months: Month[] = [
     name: 'December',
     shortName: 'Dec',
     index: 11,
-    color: '#000000',
+    color: '#292828',
   },
 ];
