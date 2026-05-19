@@ -1,4 +1,4 @@
-export type Segment = {
+export type TimeSegment = {
   index: number;
   label: string;
   color: string;
