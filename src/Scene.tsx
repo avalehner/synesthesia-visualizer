@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { months } from './data/monthsConfig';
+import days from './data/daysConfig';
 import { useFrame } from '@react-three/fiber';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import SegmentCylinder from './components/SegmentCylinder';
 
 const segmentAngle = (Math.PI * 2) / 12; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
@@ -28,6 +29,8 @@ const Scene = () => {
   //holds the index of the clicked month
   const clickedMonthRef = useRef<number | null>(null);
 
+  const [viewLevel, setViewLevel] = useState<'year' | 'day'>('year'); //string literal type (variable can only be one of these specific string values)
+
   useEffect(() => {
     const handleHorizontalScroll = (e: WheelEvent) => {
       scrollVelocityRef.current += e.deltaX * 0.005;
@@ -41,8 +44,14 @@ const Scene = () => {
     };
   }, []);
 
-  useFrame((_state, delta) => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return; //null check
+
+    //zoom in for day view
+    const camera = state.camera as THREE.PerspectiveCamera;
+    const targetFov = viewLevel === 'year' ? 50 : 3;
+    camera.fov += (targetFov - camera.fov) * SMOOTHING;
+    camera.updateProjectionMatrix();
 
     if (clickedMonthRef.current !== null) {
       const index = clickedMonthRef.current;
@@ -80,6 +89,11 @@ const Scene = () => {
     // groupRef.current.rotation.y += cursorVelocityRef.current * delta;
   });
 
+  const activeTimeSegments =
+    viewLevel === 'year'
+      ? months.map((month) => ({ index: month.index, label: month.name, color: month.color }))
+      : days;
+
   return (
     <>
       {/* <fog attach="fog" args={['#000000', 50, 70]} /> */}
@@ -89,14 +103,17 @@ const Scene = () => {
       {/* localized light source positioned off to the side of the cube */}
       <group ref={groupRef}>
         <SegmentCylinder
-          segments={months.map((month) => ({
-            index: month.index,
-            label: month.name,
-            color: month.color,
-          }))}
+          segments={activeTimeSegments}
           radius={50}
           height={20}
-          onSegmentClick={(index) => (clickedMonthRef.current = index)}
+          fontSize={viewLevel === 'year' ? 2 : 0.1}
+          onSegmentClick={(index) => {
+            if (viewLevel === 'year') {
+              setViewLevel('day');
+            } else {
+              clickedMonthRef.current = index;
+            }
+          }}
         />{' '}
         {/* simplest container in Three.js, holds meshes and can be transformed as a unit (allows us to rotate entire ring of months at once */}
       </group>
