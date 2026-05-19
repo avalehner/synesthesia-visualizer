@@ -1,25 +1,33 @@
 import * as THREE from 'three';
-import type { Segment } from '../types';
+import type { TimeSegment } from '../types';
 import { Fragment, useState } from 'react';
 import { Text } from '@react-three/drei';
 
 interface SegmentCylinderProps {
-  segments: Segment[];
+  segments: TimeSegment[];
   radius: number;
   height: number;
+  fontSize: number;
   onSegmentClick: (index: number) => void;
 }
-const segmentAngle = (Math.PI * 2) / 12; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
 
-const getSegmentCenterAngle = (index: number) => {
-  const startingOffset = 6 * segmentAngle; //camera points at 180 degrees, want Jan to start there
-  const subtractionAmount = -index * segmentAngle;
-  const centerAngle = startingOffset + subtractionAmount + segmentAngle / 2; //adds 15 degrees to move edge of segment to senter
-  return centerAngle;
-};
-
-const SegmentCylinder = ({ segments, radius, height, onSegmentClick }: SegmentCylinderProps) => {
+const SegmentCylinder = ({
+  segments,
+  radius,
+  height,
+  fontSize,
+  onSegmentClick,
+}: SegmentCylinderProps) => {
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
+
+  const segmentAngle = (Math.PI * 2) / segments.length; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
+
+  const getSegmentCenterAngle = (index: number) => {
+    const startingOffset = Math.PI; //camera points at 180 degrees, want Jan to start there
+    const subtractionAmount = -index * segmentAngle;
+    const centerAngle = startingOffset + subtractionAmount + segmentAngle / 2; //adds 15 degrees to move edge of segment to senter
+    return centerAngle;
+  };
 
   return segments.map((segment) => {
     return (
@@ -44,7 +52,7 @@ const SegmentCylinder = ({ segments, radius, height, onSegmentClick }: SegmentCy
               8,
               1,
               true,
-              -segment.index * segmentAngle + 6 * segmentAngle,
+              -segment.index * segmentAngle + Math.PI,
               segmentAngle,
             ]}
           />
@@ -65,6 +73,7 @@ const SegmentCylinder = ({ segments, radius, height, onSegmentClick }: SegmentCy
             Math.cos(getSegmentCenterAngle(segment.index)) * 49.5, //reduced radius to 49.5 so its slightly inside wall
           ]}
           rotation={[0, Math.PI + getSegmentCenterAngle(segment.index), 0]}
+          fontSize={fontSize}
         >
           {segment.label}
         </Text>
