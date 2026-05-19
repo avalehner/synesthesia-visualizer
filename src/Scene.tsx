@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { months } from './monthsConfig';
+import { months } from './data/monthsConfig';
 import { useFrame } from '@react-three/fiber';
-import { useRef, useEffect, Fragment, useState } from 'react';
-import { Text } from '@react-three/drei';
+import { useRef, useEffect } from 'react';
+import SegmentCylinder from './components/SegmentCylinder';
 
 const segmentAngle = (Math.PI * 2) / 12; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
 // const SENSITIVITY = 0.3;
@@ -27,8 +27,6 @@ const Scene = () => {
 
   //holds the index of the clicked month
   const clickedMonthRef = useRef<number | null>(null);
-
-  const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
 
   useEffect(() => {
     const handleHorizontalScroll = (e: WheelEvent) => {
@@ -90,57 +88,17 @@ const Scene = () => {
       <pointLight position={[2, 2, 2]} intensity={1} />{' '}
       {/* localized light source positioned off to the side of the cube */}
       <group ref={groupRef}>
-        {' '}
+        <SegmentCylinder
+          segments={months.map((month) => ({
+            index: month.index,
+            label: month.name,
+            color: month.color,
+          }))}
+          radius={50}
+          height={20}
+          onSegmentClick={(index) => (clickedMonthRef.current = index)}
+        />{' '}
         {/* simplest container in Three.js, holds meshes and can be transformed as a unit (allows us to rotate entire ring of months at once */}
-        {months.map((month) => {
-          return (
-            <Fragment key={month.index}>
-              <mesh
-                position={[0, 0, 0]}
-                onClick={() => {
-                  clickedMonthRef.current = month.index;
-                  console.log('clicked month:', month.name);
-                }}
-                onPointerOver={() => setHoveredMonth(month.index)}
-                onPointerOut={() => setHoveredMonth(null)}
-              >
-                {' '}
-                {/* positions 5 units in front of the camera */}
-                <cylinderGeometry
-                  args={[
-                    50,
-                    50,
-                    20,
-                    8,
-                    1,
-                    true,
-                    -month.index * segmentAngle + 6 * segmentAngle,
-                    segmentAngle,
-                  ]}
-                />
-                {/* cylinder args={[radiusTop, radiusBottom, height, radialSegments, heightSegments, openEnded, thetaStart, thetaLength]} */}
-                <meshStandardMaterial
-                  color={month.color}
-                  emissive={hoveredMonth === month.index ? month.color : 'black'}
-                  emissiveIntensity={hoveredMonth === month.index ? 0.5 : 0}
-                  side={THREE.BackSide}
-                />
-                {/* bright hotpink, easy to see*/}
-              </mesh>
-              <Text
-                position={[
-                  //center angle calculation inside sine and cosine
-                  Math.sin(getSegmentCenterAngle(month.index)) * 49.5,
-                  0,
-                  Math.cos(getSegmentCenterAngle(month.index)) * 49.5, //reduced radius to 49.5 so its slightly inside wall
-                ]}
-                rotation={[0, Math.PI + getSegmentCenterAngle(month.index), 0]}
-              >
-                {month.name}
-              </Text>
-            </Fragment>
-          );
-        })}
       </group>
     </>
   );
