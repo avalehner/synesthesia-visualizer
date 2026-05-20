@@ -144,7 +144,7 @@ const Scene = () => {
                   return acc + current;
                 }, 0);
               console.log('clicked month', dayIndex);
-              clickedDayRef.current = dayIndex + 5;
+              clickedDayRef.current = dayIndex + 5; //so i start at slightly into month
             }
           }}
         />{' '}
