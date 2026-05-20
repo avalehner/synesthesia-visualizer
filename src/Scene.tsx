@@ -5,17 +5,9 @@ import { useFrame } from '@react-three/fiber';
 import { useRef, useEffect, useState } from 'react';
 import SegmentCylinder from './components/SegmentCylinder';
 
-// const segmentAngle = (Math.PI * 2) / 12; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
 // const SENSITIVITY = 0.3;
 // const DEAD_ZONE = 0.2;
 const SMOOTHING = 0.1;
-
-// const getSegmentCenterAngle = (index: number) => {
-//   const startingOffset = Math.PI; //camera points at 180 degrees, want Jan to start there
-//   const subtractionAmount = -index * segmentAngle;
-//   const centerAngle = startingOffset + subtractionAmount + segmentAngle / 2; //adds 15 degrees to move edge of segment to senter
-//   return centerAngle;
-// };
 
 const Scene = () => {
   //before the component has mounted groupREf.current will be null
@@ -44,6 +36,21 @@ const Scene = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setViewLevel('year');
+        clickedDayRef.current = null;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const activeTimeSegments =
     viewLevel === 'year'
       ? months.map((month) => ({ index: month.index, label: month.name, color: month.color }))
@@ -66,26 +73,6 @@ const Scene = () => {
     const targetFov = viewLevel === 'year' ? 50 : 3;
     camera.fov += (targetFov - camera.fov) * SMOOTHING;
     camera.updateProjectionMatrix();
-
-    // if (clickedMonthRef.current !== null) {
-    //   const index = clickedMonthRef.current;
-    //   const centerAngle = getSegmentCenterAngle(index);
-    //   const baseTarget = Math.PI - centerAngle;
-    //   const currentRotation = groupRef.current.rotation.y;
-    //   const difference = currentRotation - baseTarget; //difference will equal base target if cylinder has not been rotate more than 2pi
-    //   const numRevolutions = Math.round(difference / (2 * Math.PI));
-    //   const nearestEquivalentTarget = baseTarget + numRevolutions * 2 * Math.PI;
-
-    //   //lerp
-    //   groupRef.current.rotation.y +=
-    //     (nearestEquivalentTarget - groupRef.current.rotation.y) * SMOOTHING;
-
-    //   if (Math.abs(nearestEquivalentTarget - currentRotation) < 0.001)
-    //     clickedMonthRef.current = null;
-
-    //   cursorVelocityRef.current = 0;
-    //   return;
-    // }
 
     if (clickedDayRef.current !== null) {
       const index = clickedDayRef.current;
