@@ -1,9 +1,9 @@
 import { months } from './monthsConfig';
 import type { TimeSegment } from '../types';
 
-const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+export const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const daysOfWeek = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
-const days: TimeSegment[] = [];
+export const days: TimeSegment[] = [];
 let dayIndex = 0;
 
 for (let i = 0; i < 12; i++) {
@@ -18,5 +18,3 @@ for (let i = 0; i < 12; i++) {
     dayIndex++;
   }
 }
-
-export default days;

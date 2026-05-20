@@ -1,21 +1,21 @@
 import * as THREE from 'three';
 import { months } from './data/monthsConfig';
-import days from './data/daysConfig';
+import { days, daysPerMonth } from './data/daysConfig';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useEffect, useState } from 'react';
 import SegmentCylinder from './components/SegmentCylinder';
 
-const segmentAngle = (Math.PI * 2) / 12; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
+// const segmentAngle = (Math.PI * 2) / 12; // 2pi/12 - full circle is 2 pi, need 12 slices for each month
 // const SENSITIVITY = 0.3;
 // const DEAD_ZONE = 0.2;
 const SMOOTHING = 0.1;
 
-const getSegmentCenterAngle = (index: number) => {
-  const startingOffset = 6 * segmentAngle; //camera points at 180 degrees, want Jan to start there
-  const subtractionAmount = -index * segmentAngle;
-  const centerAngle = startingOffset + subtractionAmount + segmentAngle / 2; //adds 15 degrees to move edge of segment to senter
-  return centerAngle;
-};
+// const getSegmentCenterAngle = (index: number) => {
+//   const startingOffset = Math.PI; //camera points at 180 degrees, want Jan to start there
+//   const subtractionAmount = -index * segmentAngle;
+//   const centerAngle = startingOffset + subtractionAmount + segmentAngle / 2; //adds 15 degrees to move edge of segment to senter
+//   return centerAngle;
+// };
 
 const Scene = () => {
   //before the component has mounted groupREf.current will be null
@@ -27,14 +27,14 @@ const Scene = () => {
   const cursorVelocityRef = useRef(0);
 
   //holds the index of the clicked month
-  const clickedMonthRef = useRef<number | null>(null);
+
+  const clickedDayRef = useRef<number | null>(null);
 
   const [viewLevel, setViewLevel] = useState<'year' | 'day'>('year'); //string literal type (variable can only be one of these specific string values)
 
   useEffect(() => {
     const handleHorizontalScroll = (e: WheelEvent) => {
       scrollVelocityRef.current += e.deltaX * 0.005;
-      clickedMonthRef.current = null; //if user is scrolling they are taking control, this cancels any active click-snap
     };
 
     window.addEventListener('wheel', handleHorizontalScroll);
@@ -43,6 +43,20 @@ const Scene = () => {
       window.removeEventListener('wheel', handleHorizontalScroll);
     };
   }, []);
+
+  const activeTimeSegments =
+    viewLevel === 'year'
+      ? months.map((month) => ({ index: month.index, label: month.name, color: month.color }))
+      : days;
+
+  const segmentAngle = (Math.PI * 2) / activeTimeSegments.length;
+
+  const getSegmentCenterAngle = (index: number) => {
+    const startingOffset = Math.PI; //camera points at 180 degrees, want Jan to start there
+    const subtractionAmount = -index * segmentAngle;
+    const centerAngle = startingOffset + subtractionAmount + segmentAngle / 2; //adds 15 degrees to move edge of segment to senter
+    return centerAngle;
+  };
 
   useFrame((state, delta) => {
     if (!groupRef.current) return; //null check
@@ -53,8 +67,28 @@ const Scene = () => {
     camera.fov += (targetFov - camera.fov) * SMOOTHING;
     camera.updateProjectionMatrix();
 
-    if (clickedMonthRef.current !== null) {
-      const index = clickedMonthRef.current;
+    // if (clickedMonthRef.current !== null) {
+    //   const index = clickedMonthRef.current;
+    //   const centerAngle = getSegmentCenterAngle(index);
+    //   const baseTarget = Math.PI - centerAngle;
+    //   const currentRotation = groupRef.current.rotation.y;
+    //   const difference = currentRotation - baseTarget; //difference will equal base target if cylinder has not been rotate more than 2pi
+    //   const numRevolutions = Math.round(difference / (2 * Math.PI));
+    //   const nearestEquivalentTarget = baseTarget + numRevolutions * 2 * Math.PI;
+
+    //   //lerp
+    //   groupRef.current.rotation.y +=
+    //     (nearestEquivalentTarget - groupRef.current.rotation.y) * SMOOTHING;
+
+    //   if (Math.abs(nearestEquivalentTarget - currentRotation) < 0.001)
+    //     clickedMonthRef.current = null;
+
+    //   cursorVelocityRef.current = 0;
+    //   return;
+    // }
+
+    if (clickedDayRef.current !== null) {
+      const index = clickedDayRef.current;
       const centerAngle = getSegmentCenterAngle(index);
       const baseTarget = Math.PI - centerAngle;
       const currentRotation = groupRef.current.rotation.y;
@@ -66,8 +100,7 @@ const Scene = () => {
       groupRef.current.rotation.y +=
         (nearestEquivalentTarget - groupRef.current.rotation.y) * SMOOTHING;
 
-      if (Math.abs(nearestEquivalentTarget - currentRotation) < 0.001)
-        clickedMonthRef.current = null;
+      if (Math.abs(nearestEquivalentTarget - currentRotation) < 0.001) clickedDayRef.current = null;
 
       cursorVelocityRef.current = 0;
       return;
@@ -89,11 +122,6 @@ const Scene = () => {
     // groupRef.current.rotation.y += cursorVelocityRef.current * delta;
   });
 
-  const activeTimeSegments =
-    viewLevel === 'year'
-      ? months.map((month) => ({ index: month.index, label: month.name, color: month.color }))
-      : days;
-
   return (
     <>
       {/* <fog attach="fog" args={['#000000', 50, 70]} /> */}
@@ -110,8 +138,13 @@ const Scene = () => {
           onSegmentClick={(index) => {
             if (viewLevel === 'year') {
               setViewLevel('day');
-            } else {
-              clickedMonthRef.current = index;
+              const dayIndex = daysPerMonth
+                .slice(0, index)
+                .reduce((acc: number, current: number) => {
+                  return acc + current;
+                }, 0);
+              console.log('clicked month', dayIndex);
+              clickedDayRef.current = dayIndex + 5;
             }
           }}
         />{' '}
