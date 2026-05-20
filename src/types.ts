@@ -4,6 +4,11 @@ export type TimeSegment = {
   color: string;
 };
 
+export type HelixSegment = TimeSegment & {
+  year?: number;
+  month?: string;
+};
+
 export type Month = {
   name: string;
   shortName: string;
